@@ -34,7 +34,7 @@ def consequences(guess, results):
         elif result == yellow:
             information.append(answer_arr[i] != letter)
             information.append(Or(*[answer_arr[j] == letter for j in range(LENGTH) if i != j]))
-        elif result == green:
+        else: # result == green
             information.append(answer_arr[i] == letter)
     return information
 
@@ -50,7 +50,7 @@ def main():
         guess = pp(s.model())
         results = [None]
         while None in results:
-            response = input(f'Guess {guess}: ')
+            response = input(f'Guess "{guess}": ')
             results = parse_response(response)
         if results == [green] * LENGTH:
             print('yay')
