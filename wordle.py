@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import string
+from itertools import combinations
 from z3 import *
 
 with open('answers.txt') as answers:
@@ -27,15 +28,30 @@ def parse_response(response):
 
 def consequences(guess, results):
     information = []
-    for i, (letter_str, result) in enumerate(zip(guess, results)):
-        letter = lettermap[letter_str]
-        if result == black:
-            information.extend([answer_arr[j] != letter for j in range(LENGTH)])
-        elif result == yellow:
-            information.append(answer_arr[i] != letter)
-            information.append(Or(*[answer_arr[j] == letter for j in range(LENGTH) if i != j]))
-        else: # result == green
-            information.append(answer_arr[i] == letter)
+
+    results_inv = {k: [] for k in [black, yellow, green]}
+    results_inv.update({result: [i for i, r in enumerate(results) if result.eq(r)] for result in results})
+    letter_inv = {letter: [i for i, l in enumerate(guess) if letter == l] for letter in guess}
+
+    information.extend([answer_arr[i] == lettermap[guess[i]] for i in results_inv[green]])
+    information.extend([answer_arr[i] != lettermap[guess[i]] for i in results_inv[yellow] + results_inv[black]])
+
+    for letter, positions in letter_inv.items():
+        remaining_positions = set(range(LENGTH)) - set(positions) - set(results_inv[green])
+        at_least = len([results[i] for i in positions if results[i].eq(yellow)])
+        is_exact = black in [results[i] for i in positions]
+
+        location_possibilities = combinations(remaining_positions, at_least)
+        collect = []
+        for locations in location_possibilities:
+            conjunct = [answer_arr[i] == lettermap[letter] for i in locations]
+            if is_exact:
+                not_it = remaining_positions - set(locations)
+                conjunct.extend([answer_arr[i] != lettermap[letter] for i in not_it])
+            collect.append(And(*conjunct))
+
+        information.append(Or(*collect))
+
     return information
 
 def pp(model):
