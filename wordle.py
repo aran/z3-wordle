@@ -7,9 +7,6 @@ from z3 import *
 with open('answers.txt') as answers:
     ANSWERS = answers.read().splitlines()
 
-# with open('guesses.txt') as guesses:
-#     GUESSES = set(guesses.read().splitlines() + ANSWERS)
-
 LENGTH = 5
 
 Letter, letters = EnumSort('Letter', string.ascii_lowercase)
